@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#07130d" />
+  <title>FC Germania 09 – Sponsoren</title>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background:
+        radial-gradient(circle at 50% 35%, rgba(53, 129, 78, .22), transparent 42%),
+        linear-gradient(145deg, #07130d 0%, #0b2216 50%, #06100b 100%);
+      color: #fff;
+    }
+    .stage {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: clamp(24px, 4vw, 64px);
+    }
+    .stage::before {
+      content: "FCG 09";
+      position: absolute;
+      inset: auto -2vw -6vh auto;
+      font-size: min(30vw, 430px);
+      font-weight: 900;
+      letter-spacing: -.08em;
+      color: rgba(255,255,255,.025);
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    .card {
+      width: min(92vw, 1450px);
+      height: min(88vh, 900px);
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto auto;
+      align-items: center;
+      justify-items: center;
+      gap: clamp(10px, 2vh, 24px);
+      padding: clamp(26px, 4vw, 62px);
+      border: 1px solid rgba(255,255,255,.11);
+      border-radius: clamp(24px, 3vw, 44px);
+      background: rgba(8, 22, 14, .72);
+      box-shadow: 0 24px 80px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.06);
+      backdrop-filter: blur(8px);
+      opacity: 0;
+      transform: scale(.985);
+      transition: opacity .55s ease, transform .55s ease;
+    }
+    .card.visible { opacity: 1; transform: scale(1); }
+    .eyebrow {
+      font-size: clamp(13px, 1.5vw, 22px);
+      font-weight: 800;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.68);
+      text-align: center;
+    }
+    .logo-wrap {
+      width: min(76vw, 1050px);
+      height: min(45vh, 460px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 28px;
+      background: rgba(255,255,255,.96);
+      padding: clamp(24px, 4vw, 62px);
+      overflow: hidden;
+    }
+    .logo-wrap.no-logo { background: rgba(255,255,255,.08); }
+    #logo {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+    .fallback {
+      display: none;
+      max-width: 90%;
+      text-align: center;
+      color: #fff;
+      font-size: clamp(34px, 6vw, 82px);
+      font-weight: 900;
+      line-height: 1.05;
+    }
+    .sponsor {
+      max-width: 95%;
+      font-size: clamp(28px, 4.2vw, 66px);
+      line-height: 1.05;
+      font-weight: 900;
+      text-align: center;
+      text-wrap: balance;
+    }
+    .claim {
+      max-width: min(92%, 1200px);
+      min-height: 2.6em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(20px, 2.3vw, 38px);
+      line-height: 1.3;
+      font-weight: 500;
+      text-align: center;
+      color: rgba(255,255,255,.88);
+      text-wrap: balance;
+    }
+    .footer {
+      position: absolute;
+      left: clamp(20px, 3vw, 48px);
+      right: clamp(20px, 3vw, 48px);
+      bottom: clamp(15px, 2vh, 28px);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      font-size: clamp(11px, 1vw, 16px);
+      color: rgba(255,255,255,.48);
+      pointer-events: none;
+    }
+    #status { text-align: right; }
+    .error {
+      max-width: 900px;
+      padding: 28px;
+      border-radius: 20px;
+      background: rgba(120, 25, 25, .4);
+      text-align: center;
+      line-height: 1.45;
+      font-size: clamp(18px, 2vw, 28px);
+    }
+    @media (orientation: portrait) {
+      .card { height: min(91vh, 1100px); padding: clamp(24px, 5vw, 50px); }
+      .logo-wrap { width: 78vw; height: min(37vh, 430px); }
+      .sponsor { font-size: clamp(30px, 7vw, 64px); }
+      .claim { font-size: clamp(20px, 4vw, 34px); }
+    }
+  </style>
+</head>
+<body>
+  <main class="stage">
+    <section class="card" id="card" aria-live="polite">
+      <div class="eyebrow" id="category">Partner des FC Germania 09</div>
+      <div class="logo-wrap" id="logoWrap">
+        <img id="logo" alt="Sponsorlogo" />
+        <div class="fallback" id="fallback"></div>
+      </div>
+      <div class="sponsor" id="sponsor"></div>
+      <div class="claim" id="claim"></div>
+    </section>
+    <div class="footer">
+      <span>FC Germania 09 Großkrotzenburg</span>
+      <span id="status"></span>
+    </div>
+  </main>
+
+  <script>
+    const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTYX-jozloAfaj-tZ11ZOAIglmyjME58WRa2H52XHjBm0ZpHx78JEsL08091BMRxrSgTHm_BDleAzk0/pub?gid=2113186516&single=true&output=csv';
+    const REFRESH_MS = 60_000;
+    const DEFAULT_SECONDS = 8;
+
+    let sponsors = [];
+    let currentIndex = -1;
+    let slideTimer = null;
+    let signature = '';
+
+    const card = document.getElementById('card');
+    const logoWrap = document.getElementById('logoWrap');
+    const logo = document.getElementById('logo');
+    const fallback = document.getElementById('fallback');
+    const sponsorEl = document.getElementById('sponsor');
+    const claimEl = document.getElementById('claim');
+    const categoryEl = document.getElementById('category');
+    const statusEl = document.getElementById('status');
+
+    function parseCSV(text) {
+      const rows = [];
+      let row = [], field = '', quoted = false;
+      for (let i = 0; i < text.length; i++) {
+        const c = text[i];
+        if (quoted) {
+          if (c === '"' && text[i + 1] === '"') { field += '"'; i++; }
+          else if (c === '"') quoted = false;
+          else field += c;
+        } else {
+          if (c === '"') quoted = true;
+          else if (c === ',') { row.push(field); field = ''; }
+          else if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
+          else if (c !== '\r') field += c;
+        }
+      }
+      if (field.length || row.length) { row.push(field); rows.push(row); }
+      if (!rows.length) return [];
+      const headers = rows.shift().map(h => h.trim().replace(/^\uFEFF/, ''));
+      return rows.filter(r => r.some(v => v.trim() !== '')).map(r => {
+        const obj = {};
+        headers.forEach((h, i) => obj[h] = (r[i] ?? '').trim());
+        return obj;
+      });
+    }
+
+    function boolTrue(v) {
+      return ['true', 'wahr', '1', 'yes', 'ja', 'x'].includes(String(v || '').trim().toLowerCase());
+    }
+
+    function parseDate(value) {
+      const v = String(value || '').trim();
+      if (!v) return null;
+      let m;
+      if ((m = v.match(/^(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})$/))) {
+        return new Date(+m[3], +m[2] - 1, +m[1], 0, 0, 0, 0);
+      }
+      if ((m = v.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/))) {
+        return new Date(+m[1], +m[2] - 1, +m[3], 0, 0, 0, 0);
+      }
+      const d = new Date(v);
+      return Number.isNaN(d.getTime()) ? null : d;
+    }
+
+    function isCurrentlyValid(s) {
+      if (!boolTrue(s.Aktiv)) return false;
+      const now = new Date();
+      const from = parseDate(s.GueltigVon || s.GültigVon);
+      const until = parseDate(s.GueltigBis || s.GültigBis);
+      if (from && now < from) return false;
+      if (until) {
+        const inclusiveEnd = new Date(until);
+        inclusiveEnd.setHours(23, 59, 59, 999);
+        if (now > inclusiveEnd) return false;
+      }
+      return true;
+    }
+
+    function normalize(rows) {
+      return rows
+        .filter(isCurrentlyValid)
+        .map((s, pos) => ({
+          id: s.SponsorID || `row-${pos}`,
+          name: s.Sponsor || '',
+          logo: s.Logo || s.LogoURL || '',
+          claim: s.AnzeigeLeitsatz || s.Leitsatz1 || '',
+          category: s.Kategorie || 'Sponsor',
+          seconds: Math.max(3, Number(String(s.AnzeigedauerSek || DEFAULT_SECONDS).replace(',', '.')) || DEFAULT_SECONDS),
+          order: Number(String(s.Reihenfolge || pos + 1).replace(',', '.')) || pos + 1
+        }))
+        .filter(s => s.name)
+        .sort((a, b) => a.order - b.order || a.name.localeCompare(b.name, 'de'));
+    }
+
+    async function loadSponsors(initial = false) {
+      try {
+        const url = `${CSV_URL}&_=${Date.now()}`;
+        const res = await fetch(url, { cache: 'no-store' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const text = await res.text();
+        const next = normalize(parseCSV(text));
+        if (!next.length) throw new Error('Keine aktiven Sponsoren gefunden');
+        const nextSignature = JSON.stringify(next);
+        sponsors = next;
+        statusEl.textContent = `${sponsors.length} aktive Partner`;
+        if (initial || signature !== nextSignature) {
+          signature = nextSignature;
+          if (initial || currentIndex < 0) {
+            currentIndex = -1;
+            showNext();
+          }
+        }
+      } catch (err) {
+        console.error(err);
+        if (!sponsors.length) {
+          card.classList.add('visible');
+          card.innerHTML = `<div class="error">Sponsor-Daten konnten gerade nicht geladen werden.<br><small>${String(err.message || err)}</small></div>`;
+          statusEl.textContent = 'Verbindungsfehler';
+        }
+      }
+    }
+
+    function render(s) {
+      categoryEl.textContent = s.category ? `${s.category} · Partner des FC Germania 09` : 'Partner des FC Germania 09';
+      sponsorEl.textContent = s.name;
+      claimEl.textContent = s.claim;
+      fallback.textContent = s.name;
+
+      logo.onload = () => {
+        logo.style.display = 'block';
+        fallback.style.display = 'none';
+        logoWrap.classList.remove('no-logo');
+      };
+      logo.onerror = () => {
+        logo.style.display = 'none';
+        fallback.style.display = 'block';
+        logoWrap.classList.add('no-logo');
+      };
+
+      if (s.logo) {
+        logo.style.display = 'block';
+        fallback.style.display = 'none';
+        logoWrap.classList.remove('no-logo');
+        logo.src = s.logo;
+      } else {
+        logo.removeAttribute('src');
+        logo.style.display = 'none';
+        fallback.style.display = 'block';
+        logoWrap.classList.add('no-logo');
+      }
+    }
+
+    function showNext() {
+      clearTimeout(slideTimer);
+      if (!sponsors.length) return;
+      card.classList.remove('visible');
+      window.setTimeout(() => {
+        currentIndex = (currentIndex + 1) % sponsors.length;
+        const s = sponsors[currentIndex];
+        render(s);
+        requestAnimationFrame(() => card.classList.add('visible'));
+        slideTimer = window.setTimeout(showNext, s.seconds * 1000);
+      }, currentIndex < 0 ? 0 : 450);
+    }
+
+    loadSponsors(true);
+    window.setInterval(() => loadSponsors(false), REFRESH_MS);
+  </script>
+</body>
+</html>
