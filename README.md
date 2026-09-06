@@ -17,6 +17,7 @@ Die Seite liest die veröffentlichte Sponsor-CSV aus Google Sheets (`gid=2113186
 Relevante Felder u. a.:
 
 - `SponsorID`
+- `Nr`
 - `Sponsor`
 - `Aktiv`
 - `GueltigVon` / `GültigVon`
@@ -29,6 +30,28 @@ Relevante Felder u. a.:
 
 Standard-Anzeigedauer bei fehlendem Wert: **8 Sekunden**.
 
+## Anzeige-Regeln
+
+Ein Sponsor wird angezeigt, wenn:
+- `Aktiv = true`
+- `Sponsor` gefüllt ist
+- `Gültig von` leer ist oder der aktuelle Tag nicht davor liegt
+- `Gültig bis` leer ist oder der aktuelle Tag nicht danach liegt
+
+`Gültig von/bis` sind optional.
+
+## Sortierung
+
+Die aktuelle Seite sortiert primär nach `Nr` und verwendet `Reihenfolge` als Fallback.
+
+Für neue Sponsoren wird in Glide trotzdem `Reihenfolge = Nr` gesetzt. Das hält Altbestand und mögliche ältere/cached Seitenausgaben kompatibel.
+
+## Logo-Regel
+
+`Logo` ist führend. `LogoURL` wird nur verwendet, wenn `Logo` leer ist.
+
+Damit ist ein in Glide neu hochgeladenes oder geändertes Logo automatisch maßgeblich. Eine zusätzliche manuelle Pflege von `LogoURL` ist für neue Sponsoren nicht nötig.
+
 ## Blocksteuerung
 
 Die URL unterstützt:
@@ -40,7 +63,12 @@ Beispiel:
 
 `?start=3&count=3`
 
-Damit kann der Raspberry je Werbeblock gezielt drei aufeinanderfolgende Sponsoren anzeigen und beim nächsten Block mit dem nächsten Index fortsetzen.
+Wichtig: `start` ist ein **0-basierter Positionsindex der bereits gefilterten aktiven/gültigen Sponsorenliste**, nicht die Sponsor-Nummer `Nr`.
+
+Beispiel bei 36 aktiven Sponsoren:
+- `start=0` = erster aktiver Sponsor
+- `start=35` = 36. aktiver Sponsor
+- `start=36` = wieder erster aktiver Sponsor
 
 Gewünschte produktive Folge bei `count=3`:
 
@@ -70,6 +98,17 @@ Zur reinen Sponsorzeit kommen kleine technische Übergänge hinzu. Der Raspberry
 
 Bei drei Sponsoren ergibt sich damit ein kompletter Block von ungefähr **25,4 Sekunden**. Dadurch erhält auch der letzte Sponsor seine volle Anzeigezeit und wird nicht 1–2 Sekunden zu früh abgeschnitten.
 
+## Glide-Admin / neue Sponsoren
+
+Neue Sponsoren werden vollständig in Glide gepflegt. Der Raspberry muss dafür nicht angepasst werden.
+
+Beim Anlegen werden in der PlatzManager-App automatisch vorbereitet:
+- `SponsorID`
+- `Nr`
+- `Reihenfolge = Nr`
+
+Der globale Sponsor-Zähler liegt in der bestehenden Single-Row-`System`-Zeile der PlatzManager-App. Details dazu sind im PlatzManager-Repository unter `docs/sponsorverwaltung.md` dokumentiert.
+
 ## Raspberry-Integration
 
 Produktiver Ablauf:
@@ -84,7 +123,7 @@ Produktiver Ablauf:
 
 Die zentrale Kiosk-Konfiguration (`SponsorRondellAktiv`, `PlatzmanagerDauerSek`, `SponsorenProBlock`, `AktualisierungSek`, `RondellURL`, `PlatzmanagerURL`, `NurPlatzmanager`) kommt weiterhin aus Glide/Google Sheets.
 
-## Technische Entscheidung 05.09.2026
+## Technische Entscheidung
 
 Verworfen wurden:
 
@@ -97,4 +136,4 @@ Produktiv verwendet werden deshalb **zwei vorgeladene Tabs + DevTools-Target-Akt
 
 ## Status
 
-Stand 05.09.2026: produktiv getestet. Sponsorblöcke laufen fortlaufend ohne Wiederholung des vorherigen Blocks, der Rücksprung zum Platzmanager funktioniert stabil, und der Timing-Puffer stellt die volle Anzeigezeit des letzten Sponsors sicher.
+Stand 06.09.2026: produktiv getestet. Sponsorblöcke laufen fortlaufend ohne Wiederholung des vorherigen Blocks, der Rücksprung zum Platzmanager funktioniert stabil, der Timing-Puffer stellt die volle Anzeigezeit des letzten Sponsors sicher, und neue Sponsoren können über Glide gepflegt werden.
