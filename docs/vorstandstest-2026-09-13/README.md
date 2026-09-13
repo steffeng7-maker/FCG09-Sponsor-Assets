@@ -20,7 +20,9 @@ Separater Vorstands-/Teststand für die Premium-Ansicht des FCG09 Platzmanagers.
 - nächste Belegung bleibt erhalten, wird aber nur gezeigt wenn tatsächlich vorhanden
 - Statuslegende wurde aus der Premium-Ansicht entfernt
 - Kabinenbereich rechts bleibt erhalten, Kabinenzeit wurde aus der Anzeige entfernt; Anzeige aktuell kompakt `K1  G1-Jugend`
+- bei komplett leerer Kabinenliste wird bewusst `Keine Belegung` angezeigt
 - Sperr-Overlay Premium ist vollständig von der Live-Sperranzeige getrennt
+- Premium-Sperre nutzt dunkles Glas, rote Akzentkante und dezente Zeit-Pill statt großer roter Alarmfläche
 
 ## Glide-Logiken, die im Zuge des Premium-Tests ergänzt/angepasst wurden
 
@@ -29,7 +31,6 @@ Separater Vorstands-/Teststand für die Premium-Ansicht des FCG09 Platzmanagers.
 Vorher bei leerem aktiven Team: `---`.
 
 Neu:
-
 - IF `Aktives Team` leer → `FREI`
 - ELSE → `TeamName`
 
@@ -40,50 +41,48 @@ Ergebnis: freie Viertel werden bewusst als `FREI` dargestellt.
 Problem: `Aktive Zeit` ist ein Template `{Aktive Von} - {Aktive Bis}` und erzeugt bei fehlenden Werten weiterhin einen Bindestrich. Lookup-Empty-Prüfungen waren nicht stabil genug.
 
 Bereinigte Anzeige:
-
-- bei keiner aktiven Belegung → leer
-- sonst → `Aktive Zeit`
-
-Im Test wurde dafür die bestehende Aktiv-Logik (`AktivFlag`) als stabiler Trigger verwendet.
+- IF `AktivFlag = 0` → leer
+- ELSE → `Aktive Zeit`
 
 ### Zonen – `NächsteTeamAnzeige Clean`
 
 Neue If-Then-Else-Spalte:
-
 - IF `NaechstesTeam` leer → leer
 - ELSE → `NächsteTeamAnzeige`
 
 Danach wurden die Single-Value-Spalten `Q1 NaechstesTeam`, `Q2 NaechstesTeam`, `Q3 NaechstesTeam`, `Q4 NaechstesTeam` auf `NächsteTeamAnzeige Clean` umgestellt.
 
 Ergebnis:
-
 - Hybridplatz ohne Folgebelegung: keine leere Beschriftung `Nächste:` mehr
 - Rasenplatz mit Folgebelegung: z. B. `Nächste: G1 09:00` bleibt sichtbar
 
 ### Kabinenanzeige
 
 Die neue Kabinenlogik bleibt erhalten. Für die Premium-Anzeige wurde die Darstellung vereinfacht:
-
 - Uhrzeit in der Kabinenübersicht entfernt
-- Kabine dezent, Teamname stärker
+- Kabinen-ID dezent, Teamname stärker
 - Beispiel: `K1  G1-Jugend`
 
-Die Daten kommen weiterhin über `{Kabinen HTML Liste}`.
+`Kabinen HTML Liste` bleibt die Joined List aus `Kabinen Anzeige`.
+
+Neu: `Kabinen HTML Liste Clean`
+- IF `Kabinen HTML Liste` is empty
+- THEN dezentes HTML `Keine Belegung`
+- ELSE `Kabinen HTML Liste`
+
+Das Premium-Platz-HTML verwendet deshalb `{Kabinen HTML Liste Clean}`.
 
 ### Premium-Sperrlogik
 
 Produktive Spalten bleiben unverändert:
-
 - `Sperr Overlay HTML`
 - `Sperr Overlay Anzeige`
 
 Neu für Premium:
-
 - `Sperr Overlay HTML Premium`
 - `Sperr Overlay Anzeige Premium`
 
 `Sperr Overlay Anzeige Premium`:
-
 - IF `Heutige Sperre Grund` is not empty
 - THEN `Sperr Overlay HTML Premium`
 - ELSE leer
@@ -98,19 +97,22 @@ Das Premium-Platz-HTML verwendet ausschließlich `{Sperr Overlay Anzeige Premium
 - `{ObenOrientierung}` / `{UntenOrientierung}` / `{LinkeOrientierung}` / `{RechteOrientierung}`
 - `{Sperr Overlay Anzeige Premium}`
 - Q1–Q4: Team, Team Icon, Terminart, Gegner, Wettbewerb, Zeit, StatusTorwart, NaechstesTeam, AnzeigeIcon
-- `{Kabinen HTML Liste}`
+- `{Kabinen HTML Liste Clean}`
 
 ## Bekannter offener Punkt
 
-`AnzeigeIcon` liefert bei `Frei` aktuell noch den weißen Statuspunkt. In der Premium-Ansicht ist das deutlich kleiner, wurde aber absichtlich nicht per HTML entfernt, damit Aktiv/Konflikt/Gesperrt nicht beschädigt werden. Falls gewünscht, später gezielt in der Glide-Logik lösen: Frei → leer, Aktiv → gelb, Konflikt → rot, Gesperrt → Warnsymbol/Overlay.
+`AnzeigeIcon` liefert bei `Frei` aktuell noch den weißen/grauen Statuspunkt. In der Premium-Ansicht ist er deutlich kleiner, wurde aber absichtlich nicht per HTML entfernt, damit Aktiv/Konflikt/Gesperrt nicht beschädigt werden. Falls gewünscht, später gezielt in der Glide-Logik lösen: Frei → leer, Aktiv → gelb, Konflikt → rot, Gesperrt → Warnsymbol/Overlay.
 
 ## Dateien dieser Version
 
 - `premium-platz-html.html` – aktueller Premium-Polish Platz-HTML-Stand
 - `premium-sperr-overlay.html` – separates Premium-Sperr-Overlay
 - `kabinen-template.html` – kompakte Kabinenzeile
+- `kabinen-fallback.html` – Fallback `Keine Belegung`
+- `glide-logik.md` – aus Screenshots rekonstruierte und bestätigte Glide-Konfigurationen
 - `screenshots/01-premium-overview.jpg` – freundlicher Premium-Gesamtstand
 - `screenshots/02-premium-sperre.jpg` – Premium-Sperrzustand
+- `screenshots/03-final-sperre-kabinenleer.jpg` – aktueller Referenzstand mit Premium-Sperre + `Keine Belegung`
 
 ## Screenshots
 
@@ -121,6 +123,14 @@ Das Premium-Platz-HTML verwendet ausschließlich `{Sperr Overlay Anzeige Premium
 ### Premium Sperre
 
 ![Premium Sperre](screenshots/02-premium-sperre.jpg)
+
+### Finaler Referenzzustand: gesperrt + keine Kabinenbelegung
+
+![Finale Premium Sperre](screenshots/03-final-sperre-kabinenleer.jpg)
+
+## Dokumentationsprinzip für künftige Glide-Screenshots
+
+Relevante Tabellen-/Spaltenlogiken aus künftig geteilten Glide-Screenshots werden nicht nur im Chat erläutert, sondern zusätzlich in `glide-logik.md` textlich nachgezogen. Wichtige Referenz-Screenshots können in diesem Ordner ergänzt werden. Damit bleibt die rekonstruierte Logik dauerhaft im GitHub-Stand verfügbar.
 
 ## Betriebsprinzip
 
